@@ -44,18 +44,18 @@ ipcalculator -ip4 10.1.11.24/14 -ip 8.13.29.11/29 -ip6 2001:db8::/56 -ip6 2001:d
 
 ------ Start
 --- Version IPv4
-Addr/Pref     : 0.27.0.0/14
-Address       : 0.27.0.0
+Addr/Pref     : 10.1.11.24/14
+Address       : 10.1.11.24
 Mask          : 255.252.0.0
-Network       : 0.24.0.0
-Broadcast     : 0.27.255.255
+Network       : 10.0.0.0
+Broadcast     : 10.3.255.255
 Host number   : 262142
 --- Version IPv4
-Addr/Pref     : 0.31.0.0/29
-Address       : 0.31.0.0
+Addr/Pref     : 8.13.29.11/29
+Address       : 8.13.29.11
 Mask          : 255.255.255.248
-Network       : 0.31.0.0
-Broadcast     : 0.31.0.7
+Network       : 8.13.29.8
+Broadcast     : 8.13.29.15
 Host number   : 6
 --- Version IPv6
 Addr/Pref      : 2001:db8:0:0:0:0:0:0/56
@@ -72,5 +72,6 @@ Network        : 2001:db:0:0:0:0:0:0/34
 Last address   : 2001:db:3fff:ffff:ffff:ffff:ffff:ffff/34
 Host number    : To many to bother...
 ------ End
+
 ```
 
