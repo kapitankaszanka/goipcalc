@@ -1,4 +1,4 @@
-// Package pkg allow for calculate address space.
+// Sets of function to print output
 package pkg
 
 import (
