@@ -33,12 +33,12 @@ func ParseIPv4Prefix(s string) (IPv4, error) {
 	if len(parts) > 4 {
 		return out, fmt.Errorf("invalid addr, to many octets: %s", addr)
 	}
-	for _, p := range parts {
+	for i, p := range parts {
 		v, err := parseOctet(p)
 		if err != nil {
 			return out, fmt.Errorf("invalid addr: %s, %s", addr, err)
 		}
-		ip = ip | v<<(24-(8*1))
+		ip = ip | (v << (24 - (8 * i)))
 	}
 
 	out.ipAddr = ip
