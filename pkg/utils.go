@@ -8,8 +8,8 @@ package pkg
 import (
 	"bytes"
 	"fmt"
+	"goipcalc/pkg/ipcalc"
 	"io"
-	"ipcalculator/pkg/ipcalc"
 	"text/tabwriter"
 )
 

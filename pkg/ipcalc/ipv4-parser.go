@@ -1,5 +1,6 @@
-// Copyright (c) 2025 Jan Kowalski
-// Licensed under the MIT License. See LICENSE file in the project root for details.
+// Copyright (c) 2025 Mateusz Krupczyński
+// Licensed under the MIT License.
+// See LICENSE file in the project root for details.
 
 package ipcalc
 
@@ -45,7 +46,7 @@ func ParseIPv4Prefix(s string) (IPv4, error) {
 	return out, nil
 }
 
-// convertToByteIPv4 format x.x.x.x to uint32
+// parseOctet
 func parseOctet(o string) (uint32, error) {
 	v, err := strconv.ParseUint(o, 10, 8)
 	if err != nil {

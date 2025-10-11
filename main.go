@@ -7,8 +7,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"ipcalculator/pkg"
-	"ipcalculator/pkg/ipcalc"
+	"goipcalc/pkg"
+	"goipcalc/pkg/ipcalc"
 	"os"
 )
 
