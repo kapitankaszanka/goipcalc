@@ -1,4 +1,4 @@
-# IPCalculator
+# GoIPCalc
 
 A simple IP subnet calculator written in Go.  
 You provide an IPv4/IPv6 address in CIDR notation (e.g. `192.168.1.42/27`, `::2001:db8:1/89`), and the program calculates basic network information.
@@ -34,13 +34,13 @@ go run . 192.168.1.42/27
 ```
 Or build a binary:
 ```
-go build -o ipcalculator
-./ipcalculator 192.168.1.42/27
+go build -o goipcalc
+./goipcalc -ip4 192.168.1.42/27
 ```
 
 ### basic usage
 ```
-ipcalculator -ip4 10.1.11.24/14 -ip 8.13.29.11/29 -ip6 2001:db8::/56 -ip6 2001:db::13:31:faf1/34
+goipcalc -ip4 10.1.11.24/14 -ip 8.13.29.11/29 -ip6 2001:db8::/56 -ip6 2001:db::13:31:faf1/34
 
 ------ Start
 --- Version IPv4
