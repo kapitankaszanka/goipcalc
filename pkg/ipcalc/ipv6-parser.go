@@ -12,8 +12,8 @@ import (
 )
 
 // ParseIPv6Prefix format x:x:x:x:x:x:x:x to [8]uint16
-func ParseIPv6Prefix(s string) (IPv6, error) {
-	var out IPv6
+func ParseIPv6Prefix(s string) (IP, error) {
+	var out IP
 
 	// CIDR
 	addr, pfxStr, ok := strings.Cut(s, "/")
@@ -31,13 +31,17 @@ func ParseIPv6Prefix(s string) (IPv6, error) {
 	if err != nil || pfxU > 128 {
 		return out, fmt.Errorf("invalid addr, prefix to long: %s", s)
 	}
-	out.mask = uint8(pfxU)
+
+	if err != nil {
+		return out, fmt.Errorf("invalid addr, wrong prefix: %s", s)
+	}
 
 	// Address
 	if strings.Count(addr, "::") > 1 {
 		return out, fmt.Errorf("invalid addr, multiple '::'")
 	}
 
+	tmpAddr := make([]uint16, 8)
 	if strings.Contains(addr, "::") {
 		leftRight := strings.SplitN(addr, "::", 2)
 		left, right := leftRight[0], leftRight[1]
@@ -59,11 +63,11 @@ func ParseIPv6Prefix(s string) (IPv6, error) {
 			if err != nil {
 				return out, err
 			}
-			out.hextet[idx] = v
+			tmpAddr[idx] = v
 			idx++
 		}
 		for range zeros {
-			out.hextet[idx] = 0
+			tmpAddr[idx] = 0
 			idx++
 		}
 		for _, p := range rightParts {
@@ -71,7 +75,7 @@ func ParseIPv6Prefix(s string) (IPv6, error) {
 			if err != nil {
 				return out, err
 			}
-			out.hextet[idx] = v
+			tmpAddr[idx] = v
 			idx++
 		}
 	} else {
@@ -85,10 +89,14 @@ func ParseIPv6Prefix(s string) (IPv6, error) {
 			if err != nil {
 				return out, err
 			}
-			out.hextet[i] = v
+			tmpAddr[i] = v
 		}
 	}
 
+	pfx := uint8(pfxU)
+	out.addr = tmpAddr
+	out.mask = parseMaskHextet(pfx)
+	out.pfx = pfx
 	return out, nil
 }
 
@@ -106,4 +114,47 @@ func parseHextet(p string) (uint16, error) {
 		return 0, err
 	}
 	return uint16(u), nil
+}
+
+// parseMaskHextet - function responsible for changing prefix len to only
+// valid IP type.
+func parseMaskHextet(pfx uint8) []uint16 {
+	r := []uint16{
+		0xFFFF,
+		0xFFFF,
+		0xFFFF,
+		0xFFFF,
+		0xFFFF,
+		0xFFFF,
+		0xFFFF,
+		0xFFFF,
+	}
+
+	switch pfx {
+	case 0:
+		for i := range r {
+			r[i] = 0x0
+		}
+		return r
+	case 128:
+		return r
+	default:
+		hextetNum := int(pfx / 16)
+		rem := uint8(16 - (pfx % 16))
+		for i, h := range r {
+			switch {
+			case i < hextetNum:
+				continue
+			case i == hextetNum:
+				if rem == 0 {
+					r[i] = 0x0
+				} else {
+					r[i] = h << rem
+				}
+			default:
+				r[i] = 0x0000
+			}
+		}
+		return r
+	}
 }

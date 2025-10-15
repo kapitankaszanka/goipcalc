@@ -13,16 +13,15 @@ import (
 	"text/tabwriter"
 )
 
-func NicePrint(w io.Writer, pl []ipcalc.Pretty) error {
+func NicePrint(w io.Writer, ipList []ipcalc.IP) error {
 	var buf bytes.Buffer
 	tw := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', tabwriter.StripEscape)
 
-	fmt.Fprintln(tw, "------ Start")
-	for _, p := range pl {
-		items := p.Pretty()
-		fmt.Fprintf(tw, "--- %s %s\n", items[0][0], items[0][1])
-		for _, kv := range items[1:] {
-			fmt.Fprintf(tw, "%s\t : %s\n", kv[0], kv[1])
+	for _, p := range ipList {
+		items := p.Pretty(true)
+		fmt.Fprintf(tw, "---\n")
+		for _, kv := range items {
+			fmt.Fprintf(tw, "%s:\t%s\n", kv[0], kv[1])
 		}
 	}
 
