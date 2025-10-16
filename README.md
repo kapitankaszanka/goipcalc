@@ -50,7 +50,8 @@ Options:
   -j    json output
   -json-indent
         change json output to indentation
-
+```
+```
 goipcal 2001:db8::1/64 192.168.1.24/25
 ---
 Full address:  2001:db8:0:0:0:0:0:1/64
@@ -60,7 +61,8 @@ Last address:  2001:db8:0:0:ffff:ffff:ffff:ffff
 Full address:  192.168.1.24/25
 Network:       192.168.1.0
 Broadcast:     192.168.1.127
-
+```
+```
 goipcal -d 2001:db8::1/64 192.168.1.24/25
 ---
 Full address:  2001:db8:0:0:0:0:0:1/64
@@ -78,13 +80,12 @@ Address:       192.168.1.24
 Mask:          25
 Mask address:  255.255.255.128
 Hosts number:  128
-
+```
+```
 goipcal -j 2001:db8::1/64 192.168.1.24/25
-[{"full_address":"2001:db8:0:0:0:0:0:1/64","network":"2001:db8:0:0:0:0:0:0",
-"last_address":"2001:db8:0:0:ffff:ffff:ffff:ffff"},
-{"full_address":"192.168.1.24/25","network":"192.168.1.0"
-,"broadcast":"192.168.1.127"}]
-
+[{"full_address":"2001:db8:0:0:0:0:0:1/64","network":"2001:db8:0:0:0:0:0:0","last_address":"2001:db8:0:0:ffff:ffff:ffff:ffff"},{"full_address":"192.168.1.24/25","network":"192.168.1.0","broadcast":"192.168.1.127"}]
+```
+```
 goipcal -j -json-indent 2001:db8::1/64 192.168.1.24/25
 [
   {
@@ -98,7 +99,8 @@ goipcal -j -json-indent 2001:db8::1/64 192.168.1.24/25
     "broadcast": "192.168.1.127"
   }
 ]
-
+```
+```
 goipcal -d -j -json-indent 2001:db8::1/64 192.168.1.24/25
 [
   {
