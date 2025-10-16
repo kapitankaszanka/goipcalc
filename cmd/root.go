@@ -23,20 +23,27 @@ func (s *stringSlice) Set(value string) error {
 
 func RootCMD() {
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: goipcalc [-ip4 ADDR/PLEN]... [-ip6 ADDR/PLEN]...")
+		fmt.Fprintln(os.Stderr, "Usage: goipcalc [OPTIONS] [ADDR/PLEN]")
 		fmt.Fprintln(os.Stderr, "Examples:")
-		fmt.Fprintln(os.Stderr, "  goipcalc -[ip | ip4] 10.0.0.1/24 -ip4 192.168.1.10/24")
-		fmt.Fprintln(os.Stderr, "  goipcalc -ip6 2001:db8::1/64")
+		fmt.Fprintln(os.Stderr, "  goipcalc -d 10.0.0.1/24")
+		fmt.Fprintln(os.Stderr, "  goipcalc 2001:db8::1/64 192.168.10.11/28")
+		fmt.Fprintln(os.Stderr, "Options:")
+		fmt.Fprintln(os.Stderr, "  [ADDR/PLEN] address/prefix lenght, can be multiple")
 		flag.PrintDefaults()
 	}
 
-	var ips stringSlice
-
-	flag.Var(&ips, "ip", "IPv4 address to calculate")
-	flag.Var(&ips, "ip4", "IPv4 address to calculate")
-	flag.Var(&ips, "ip6", "IPv6 address to calculate")
+	detailOutput := flag.Bool("d", false, "IPv4 address to calculate")
+	jsonOutput := flag.Bool("j", false, "IPv4 address to calculate")
+	jsonIndent := flag.Bool("json-indent", false, "IPv4 address to calculate")
 
 	flag.Parse()
+
+	ips := flag.Args()
+	if len(ips) == 0 {
+		fmt.Fprintln(os.Stderr, "Error: no address provided.")
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	pretty := make([]ipcalc.IP, 0, len(ips))
 	var errors []string
@@ -68,8 +75,27 @@ func RootCMD() {
 		}
 	}
 
+	// output
 	if len(pretty) > 0 {
-		pkg.NicePrint(os.Stdout, pretty)
-		os.Exit(0)
+		if *jsonOutput {
+			err := pkg.NicePrintJSON(
+				os.Stdout,
+				pretty,
+				*detailOutput,
+				*jsonIndent,
+			)
+			if err != nil {
+				fmt.Fprint(os.Stderr, err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		} else {
+			err := pkg.NicePrintCLI(os.Stdout, pretty, *detailOutput)
+			if err != nil {
+				fmt.Fprint(os.Stderr, err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 	}
 }
