@@ -32,9 +32,9 @@ func RootCMD() {
 		flag.PrintDefaults()
 	}
 
-	detailOutput := flag.Bool("d", false, "IPv4 address to calculate")
-	jsonOutput := flag.Bool("j", false, "IPv4 address to calculate")
-	jsonIndent := flag.Bool("json-indent", false, "IPv4 address to calculate")
+	do := flag.Bool("d", false, "IPv4 address to calculate")
+	jo := flag.Bool("j", false, "json output")
+	ji := flag.Bool("json-indent", false, "change json output to indentation")
 
 	flag.Parse()
 
@@ -77,12 +77,12 @@ func RootCMD() {
 
 	// output
 	if len(pretty) > 0 {
-		if *jsonOutput {
+		if *jo {
 			err := pkg.NicePrintJSON(
 				os.Stdout,
 				pretty,
-				*detailOutput,
-				*jsonIndent,
+				*do,
+				*ji,
 			)
 			if err != nil {
 				fmt.Fprint(os.Stderr, err)
@@ -90,7 +90,7 @@ func RootCMD() {
 			}
 			os.Exit(0)
 		} else {
-			err := pkg.NicePrintCLI(os.Stdout, pretty, *detailOutput)
+			err := pkg.NicePrintCLI(os.Stdout, pretty, *do)
 			if err != nil {
 				fmt.Fprint(os.Stderr, err)
 				os.Exit(1)
