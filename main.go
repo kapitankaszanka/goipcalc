@@ -3,9 +3,8 @@
 // See LICENSE file in the project root for details.
 
 // TO DO
-// - JSON ouput
+// - JSON error
 // - test
-// - remove different flag for ips
 
 package main
 
