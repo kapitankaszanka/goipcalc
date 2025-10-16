@@ -4,22 +4,11 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"goipcalc/pkg"
 	"goipcalc/pkg/ipcalc"
+	"goipcalc/pkg/output"
 	"os"
 	"strings"
 )
-
-type stringSlice []string
-
-func (s *stringSlice) String() string {
-	return fmt.Sprintf("%v", *s)
-}
-
-func (s *stringSlice) Set(value string) error {
-	*s = append(*s, value)
-	return nil
-}
 
 func RootCMD() {
 	flag.Usage = func() {
@@ -32,9 +21,9 @@ func RootCMD() {
 		flag.PrintDefaults()
 	}
 
-	do := flag.Bool("d", false, "IPv4 address to calculate")
-	jo := flag.Bool("j", false, "json output")
-	ji := flag.Bool("json-indent", false, "change json output to indentation")
+	detail := flag.Bool("d", false, "IPv4 address to calculate")
+	jsonOut := flag.Bool("j", false, "json output")
+	jsonIndent := flag.Bool("json-indent", false, "change json output to indentation")
 
 	flag.Parse()
 
@@ -45,57 +34,38 @@ func RootCMD() {
 		os.Exit(1)
 	}
 
-	pretty := make([]ipcalc.IP, 0, len(ips))
+	objList := make([]ipcalc.IP, 0, len(ips))
 	var errors []string
 	if len(ips) > 0 {
 		for _, v := range ips {
 			if strings.Contains(v, ":") {
 				obj, err := ipcalc.ParseIPv6Prefix(v)
 				if err != nil {
-					errors = append(errors, fmt.Sprintf("skip %q: %v\n", v, err))
+					errors = append(
+						errors,
+						fmt.Sprintf("skip %q: %v\n", v, err),
+					)
 					continue
 				}
-				pretty = append(pretty, obj)
+				objList = append(objList, obj)
 			} else {
 				obj, err := ipcalc.ParseIPv4Prefix(v)
 				if err != nil {
-					errors = append(errors, fmt.Sprintf("skip %q: %v\n", v, err))
+					errors = append(
+						errors,
+						fmt.Sprintf("skip %q: %v\n", v, err),
+					)
 					continue
 				}
-				pretty = append(pretty, obj)
+				objList = append(objList, obj)
 			}
 		}
 	}
 
-	// errors
-	if len(errors) > 0 {
-		pkg.PrintErrors(os.Stderr, errors)
-		if len(pretty) == 0 {
-			os.Exit(2)
-		}
+	status, err := output.PrintOutput(*jsonOut, *jsonIndent, *detail, errors, objList)
+	if err != nil {
+		fmt.Println(err)
 	}
+	os.Exit(status)
 
-	// output
-	if len(pretty) > 0 {
-		if *jo {
-			err := pkg.NicePrintJSON(
-				os.Stdout,
-				pretty,
-				*do,
-				*ji,
-			)
-			if err != nil {
-				fmt.Fprint(os.Stderr, err)
-				os.Exit(1)
-			}
-			os.Exit(0)
-		} else {
-			err := pkg.NicePrintCLI(os.Stdout, pretty, *do)
-			if err != nil {
-				fmt.Fprint(os.Stderr, err)
-				os.Exit(1)
-			}
-			os.Exit(0)
-		}
-	}
 }
