@@ -15,7 +15,6 @@ Given an IP address (usually in `IP/MASK` CIDR format), it will:
 - ✅ Display the **subnet mask** (CIDR and dotted-decimal)  
 - ✅ Show the **first and last usable host addresses**  
 - ✅ Calculate the **total number of hosts** in the subnet  
-- ✅ (Optionally) display the **wildcard mask** or **binary representation**
 
 ---
 
@@ -35,43 +34,91 @@ go run . 192.168.1.42/27
 Or build a binary:
 ```
 go build -o goipcalc
-./goipcalc -ip4 192.168.1.42/27
+./goipcalc 192.168.1.42/27
 ```
 
 ### basic usage
 ```
-goipcalc -ip4 10.1.11.24/14 -ip 8.13.29.11/29 -ip6 2001:db8::/56 -ip6 2001:db::13:31:faf1/34
+goipcal -help
+Usage: goipcalc [OPTIONS] [ADDR/PLEN]
+Examples:
+  goipcalc -d 10.0.0.1/24
+  goipcalc 2001:db8::1/64 192.168.10.11/28
+Options:
+  [ADDR/PLEN] address/prefix lenght, can be multiple
+  -d    IPv4 address to calculate
+  -j    json output
+  -json-indent
+        change json output to indentation
 
------- Start
---- Version IPv4
-Addr/Pref     : 10.1.11.24/14
-Address       : 10.1.11.24
-Mask          : 255.252.0.0
-Network       : 10.0.0.0
-Broadcast     : 10.3.255.255
-Host number   : 262142
---- Version IPv4
-Addr/Pref     : 8.13.29.11/29
-Address       : 8.13.29.11
-Mask          : 255.255.255.248
-Network       : 8.13.29.8
-Broadcast     : 8.13.29.15
-Host number   : 6
---- Version IPv6
-Addr/Pref      : 2001:db8:0:0:0:0:0:0/56
-Address        : 2001:db8:0:0:0:0:0:0
-Mask           : 56
-Network        : 2001:db8:0:0:0:0:0:0/56
-Last address   : 2001:db8:0:ff:ffff:ffff:ffff:ffff/56
-Host number    : To many to bother...
---- Version IPv6
-Addr/Pref      : 2001:db:0:0:0:13:31:faf1/34
-Address        : 2001:db:0:0:0:13:31:faf1
-Mask           : 34
-Network        : 2001:db:0:0:0:0:0:0/34
-Last address   : 2001:db:3fff:ffff:ffff:ffff:ffff:ffff/34
-Host number    : To many to bother...
------- End
+goipcal 2001:db8::1/64 192.168.1.24/25
+---
+Full address:  2001:db8:0:0:0:0:0:1/64
+Network:       2001:db8:0:0:0:0:0:0
+Last address:  2001:db8:0:0:ffff:ffff:ffff:ffff
+---
+Full address:  192.168.1.24/25
+Network:       192.168.1.0
+Broadcast:     192.168.1.127
 
+goipcal -d 2001:db8::1/64 192.168.1.24/25
+---
+Full address:  2001:db8:0:0:0:0:0:1/64
+Network:       2001:db8:0:0:0:0:0:0
+Last address:  2001:db8:0:0:ffff:ffff:ffff:ffff
+Address:       2001:db8:0:0:0:0:0:1
+Mask:          64
+Mask address:  ffff:ffff:ffff:ffff:0:0:0:0
+Hosts number:  18 446 744 073 709 551 616
+---
+Full address:  192.168.1.24/25
+Network:       192.168.1.0
+Broadcast:     192.168.1.127
+Address:       192.168.1.24
+Mask:          25
+Mask address:  255.255.255.128
+Hosts number:  128
+
+goipcal -j 2001:db8::1/64 192.168.1.24/25
+[{"full_address":"2001:db8:0:0:0:0:0:1/64","network":"2001:db8:0:0:0:0:0:0",
+"last_address":"2001:db8:0:0:ffff:ffff:ffff:ffff"},
+{"full_address":"192.168.1.24/25","network":"192.168.1.0"
+,"broadcast":"192.168.1.127"}]
+
+goipcal -j -json-indent 2001:db8::1/64 192.168.1.24/25
+[
+  {
+    "full_address": "2001:db8:0:0:0:0:0:1/64",
+    "network": "2001:db8:0:0:0:0:0:0",
+    "last_address": "2001:db8:0:0:ffff:ffff:ffff:ffff"
+  },
+  {
+    "full_address": "192.168.1.24/25",
+    "network": "192.168.1.0",
+    "broadcast": "192.168.1.127"
+  }
+]
+
+goipcal -d -j -json-indent 2001:db8::1/64 192.168.1.24/25
+[
+  {
+    "full_address": "2001:db8:0:0:0:0:0:1/64",
+    "network": "2001:db8:0:0:0:0:0:0",
+    "last_address": "2001:db8:0:0:ffff:ffff:ffff:ffff",
+    "address": "2001:db8:0:0:0:0:0:1",
+    "mask": "64",
+    "mask_address": "ffff:ffff:ffff:ffff:0:0:0:0",
+    "hosts_number": "18446744073709551616"
+  },
+  {
+    "full_address": "192.168.1.24/25",
+    "network": "192.168.1.0",
+    "broadcast": "192.168.1.127",
+    "address": "192.168.1.24",
+    "mask": "25",
+    "mask_address": "255.255.255.128",
+    "hosts_number": "128"
+  }
+]
 ```
 
