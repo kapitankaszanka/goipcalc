@@ -11,38 +11,48 @@ import (
 	"unicode"
 )
 
-// ParseIPv6Prefix format x:x:x:x:x:x:x:x to [8]uint16
+// ParseIPv6Prefix parse x:x::x:x/y to struct that returns
+//
+//	IP{
+//		addr []uint16
+//		mask []uint16
+//		pfx  uint8
+//	}
 func ParseIPv6Prefix(s string) (IP, error) {
 	var out IP
 
 	// CIDR
 	addr, pfxStr, ok := strings.Cut(s, "/")
 	if !ok {
-		p := fmt.Errorf("invalid addr, expected <ipv6>/mask, given: %s", s)
+		p := fmt.Errorf("invalid addr, expected <ipv6>/<mask>, given: %s", s)
 		return out, p
 	}
+	// check if ipv6:ipv4 address
 	if strings.Contains(addr, ".") {
 		return out, fmt.Errorf("invalid addr, not allowe ipv4 format: %s", s)
 	}
+	// check if zone in address
 	if strings.Contains(addr, "%") {
 		return out, fmt.Errorf("invalid addr, not allowed zones: %s", s)
 	}
+	// parse prefix
 	pfxU, err := strconv.ParseUint(pfxStr, 10, 8)
 	if err != nil || pfxU > 128 {
 		return out, fmt.Errorf("invalid addr, prefix to long: %s", s)
 	}
-
 	if err != nil {
 		return out, fmt.Errorf("invalid addr, wrong prefix: %s", s)
 	}
 
-	// Address
+	// check if multiple '::'
 	if strings.Count(addr, "::") > 1 {
 		return out, fmt.Errorf("invalid addr, multiple '::'")
 	}
 
+	// address
 	tmpAddr := make([]uint16, 8)
 	if strings.Contains(addr, "::") {
+		// split to left and right part of address
 		leftRight := strings.SplitN(addr, "::", 2)
 		left, right := leftRight[0], leftRight[1]
 		var leftParts, rightParts []string
@@ -56,6 +66,7 @@ func ParseIPv6Prefix(s string) (IP, error) {
 			return out, fmt.Errorf("invalid addr, to many hextet")
 		}
 
+		// calculate how many zeros add
 		zeros := 8 - (len(leftParts) + len(rightParts)) // how many 0x0 to add
 		idx := 0                                        // index for all loops
 		for _, p := range leftParts {
@@ -100,6 +111,7 @@ func ParseIPv6Prefix(s string) (IP, error) {
 	return out, nil
 }
 
+// parseHextet function convert string hex value to uint16
 func parseHextet(p string) (uint16, error) {
 	if len(p) == 0 || len(p) > 4 {
 		return 0, fmt.Errorf("invalid hextet: %q", p)
@@ -116,7 +128,7 @@ func parseHextet(p string) (uint16, error) {
 	return uint16(u), nil
 }
 
-// parseMaskHextet - function responsible for changing prefix len to only
+// parseMaskHextet function responsible for changing prefix len to only
 // valid IP type.
 func parseMaskHextet(pfx uint8) []uint16 {
 	r := []uint16{
