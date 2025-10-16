@@ -10,7 +10,13 @@ import (
 	"strings"
 )
 
-// ParseIPv4Prefix parse x.x.x.x/y
+// ParseIPv4Prefix parse x.x.x.x/y to struct that returns
+//
+//	IP{
+//		addr []uint16
+//		mask []uint16
+//		pfx  uint8
+//	}
 func ParseIPv4Prefix(s string) (IP, error) {
 	var out IP
 
@@ -38,7 +44,7 @@ func ParseIPv4Prefix(s string) (IP, error) {
 	return out, nil
 }
 
-// parseOctets from string and return array uint16 or error.
+// parseOctets convert number string to []uint16
 func parseOctets(addrStr string) ([]uint16, error) {
 	result := make([]uint16, 2)
 
@@ -80,9 +86,9 @@ func parseMask(m string) ([]uint16, uint8, error) {
 	}
 
 	pfx := uint8(v)
-	if pfx > 16 {
+	if pfx >= 16 {
 		mask[0] = 0xFFFF
-		mask[1] = 0xFFFF << (16 - pfx)
+		mask[1] = 0xFFFF << (32 - pfx)
 	} else {
 		mask[0] = 0xFFFF << (16 - pfx)
 		mask[1] = 0x0000
