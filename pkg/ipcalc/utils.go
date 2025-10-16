@@ -18,38 +18,45 @@ type IP struct {
 	pfx  uint8
 }
 
-func (ip IP) Pretty(format bool) [][2]string {
-
-	return [][2]string{
-		{"Addr/Pfx", ip.GetAddrMask()},
-		{"Address", ip.NiceAddr()},
-		{"Mask", strconv.Itoa(int(ip.pfx))},
-		ip.GetNetwork(),
+func (ip IP) Pretty(detail bool, pretty bool) [][2]string {
+	result := [][2]string{
+		{"Full address", ip.GetAddrMask()},
+		ip.GetFirstAddress(),
 		ip.GetLastAddr(),
-		{"Host number", ip.GetHostsNumberStr(format)},
 	}
+
+	if detail {
+		tmp := [][2]string{
+			{"Address", NiceAddr(ip.addr)},
+			{"Mask", strconv.Itoa(int(ip.pfx))},
+			{"Mask address", NiceAddr(ip.mask)},
+			{"Hosts number", ip.GetHostsNumberStr(pretty)},
+		}
+		result = append(result, tmp...)
+	}
+	return result
 }
 
 // NiceAddr format IP.addr [][uint16 to string ipv4/6 address string
-func (ip IP) NiceAddr() string {
-	switch len(ip.addr) {
+func NiceAddr(ip []uint16) string {
+	switch len(ip) {
 	case 2:
 		return fmt.Sprintf("%d.%d.%d.%d",
-			byte(ip.addr[0]>>8),
-			byte(ip.addr[0]&0x00ff),
-			byte(ip.addr[1]>>8),
-			byte(ip.addr[1]&0x00ff),
+			byte(ip[0]>>8),
+			byte(ip[0]&0x00ff),
+			byte(ip[1]>>8),
+			byte(ip[1]&0x00ff),
 		)
 	case 8:
 		return fmt.Sprintf("%x:%x:%x:%x:%x:%x:%x:%x",
-			ip.addr[0],
-			ip.addr[1],
-			ip.addr[2],
-			ip.addr[3],
-			ip.addr[4],
-			ip.addr[5],
-			ip.addr[6],
-			ip.addr[7],
+			ip[0],
+			ip[1],
+			ip[2],
+			ip[3],
+			ip[4],
+			ip[5],
+			ip[6],
+			ip[7],
 		)
 	default:
 		return ""
@@ -57,30 +64,32 @@ func (ip IP) NiceAddr() string {
 }
 
 func (ip IP) GetAddrMask() string {
-	return fmt.Sprintf("%s/%d", ip.NiceAddr(), ip.pfx)
+	return fmt.Sprintf("%s/%d", NiceAddr(ip.addr), ip.pfx)
 }
 
-// GetNetwork return string with calcualted network address
-func (ip IP) GetNetwork() [2]string {
-	r := ip
+// GetFirstAddress return string with calcualted network address
+func (ip IP) GetFirstAddress() [2]string {
+	r := append([]uint16(nil), ip.addr...)
+	m := ip.mask
+	p := ip.pfx
 	topic := "Network"
 
-	switch r.pfx {
+	switch p {
 	case 0:
-		for i := range len(r.addr) {
-			r.addr[i] = 0x0
+		for i := range r {
+			r[i] = 0x0
 		}
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	case 32:
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	case 128:
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	default:
 		// to see which hextext may be changed
-		hextetNum := int(r.pfx / 16)
+		hextetNum := int(p / 16)
 		// to flick corect bits
-		rem := uint8(16 - (r.pfx % 16))
-		for i := range r.addr {
+		rem := uint8(16 - (p % 16))
+		for i := range r {
 			switch {
 			// when the hextet does not need to be changed, omit
 			case i < hextetNum:
@@ -88,46 +97,48 @@ func (ip IP) GetNetwork() [2]string {
 			// when the hextet may be changed
 			case i == hextetNum:
 				if rem == 0 {
-					r.addr[i] = 0x0
+					r[i] = 0x0
 				} else {
-					r.addr[i] = r.addr[i] & r.mask[i]
+					r[i] = r[i] & m[i]
 				}
 			default:
-				r.addr[i] = 0xFFFF
+				r[i] = 0x0000
 			}
 		}
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	}
 }
 
 // GetLastAddr return last of ipv6 address
 func (ip IP) GetLastAddr() [2]string {
-	r := ip
+	r := append([]uint16(nil), ip.addr...)
+	m := ip.mask
+	p := ip.pfx
 	var topic string
 
-	switch len(r.addr) {
-	case 4:
+	switch len(r) {
+	case 2:
 		topic = "Broadcast"
 	default:
 		topic = "Last address"
 	}
 
-	switch r.pfx {
+	switch p {
 	case 0:
-		for i := range len(r.addr) {
-			r.addr[i] = 0xFFFF
+		for i := range r {
+			r[i] = 0xFFFF
 		}
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	case 32:
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	case 128:
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	default:
 		// to see which hextext may be changed
-		hextetNum := int(r.pfx / 16)
+		hextetNum := int(p / 16)
 		// to flick corect bits
-		rem := uint8(16 - (r.pfx % 16))
-		for i := range r.addr {
+		rem := uint8(16 - (p % 16))
+		for i := range r {
 			switch {
 			// when the hextet does not need to be changed, omit
 			case i < hextetNum:
@@ -135,18 +146,19 @@ func (ip IP) GetLastAddr() [2]string {
 			// when the hextet may be changed
 			case i == hextetNum:
 				if rem == 0 {
-					r.addr[i] = 0xFFFF
+					r[i] = 0xFFFF
 				} else {
-					r.addr[i] = r.addr[i] | ^r.mask[i]
+					r[i] = r[i] | ^m[i]
 				}
 			default:
-				r.addr[i] = 0xFFFF
+				r[i] = 0xFFFF
 			}
 		}
-		return [2]string{topic, r.NiceAddr()}
+		return [2]string{topic, NiceAddr(r)}
 	}
 }
 
+// formatBigIntWithSpaces sperate big int value on space sparate string
 func formatBigIntWithSpaces(n *big.Int) string {
 	s := n.String()
 	// Insert spaces every 3 digits from the right
