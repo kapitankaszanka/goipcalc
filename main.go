@@ -2,10 +2,6 @@
 // Licensed under the MIT License.
 // See LICENSE file in the project root for details.
 
-// TO DO
-// - JSON error
-// - test
-
 package main
 
 import (
