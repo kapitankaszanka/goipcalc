@@ -10,9 +10,15 @@ import (
 	"strings"
 )
 
-// ParseIPv4Prefix parse x.x.x.x/y
-func ParseIPv4Prefix(s string) (IPv4, error) {
-	var out IPv4
+// ParseIPv4Prefix parse x.x.x.x/y to struct that returns
+//
+//	IP{
+//		addr []uint16
+//		mask []uint16
+//		pfx  uint8
+//	}
+func ParseIPv4Prefix(s string) (IP, error) {
+	var out IP
 
 	// CIDR
 	addr, pfxStr, ok := strings.Cut(s, "/")
@@ -22,51 +28,71 @@ func ParseIPv4Prefix(s string) (IPv4, error) {
 	}
 
 	// Mask
-	v, err := parseMask(pfxStr)
+	mask, pfx, err := parseMask(pfxStr)
 	if err != nil {
 		return out, err
 	}
-	out.mask = v
 
-	// Addres
-	ip := uint32(0x0)
-	parts := strings.Split(addr, ".")
-	if len(parts) > 4 {
-		return out, fmt.Errorf("invalid addr, to many octets: %s", addr)
-	}
-	for i, p := range parts {
-		v, err := parseOctet(p)
-		if err != nil {
-			return out, fmt.Errorf("invalid addr: %s, %s", addr, err)
-		}
-		ip = ip | (v << (24 - (8 * i)))
+	ip, err := parseOctets(addr)
+	if err != nil {
+		return out, err
 	}
 
-	out.ipAddr = ip
+	out.Addr = ip
+	out.Mask = mask
+	out.Pfx = pfx
 	return out, nil
 }
 
-// parseOctet
-func parseOctet(o string) (uint32, error) {
-	v, err := strconv.ParseUint(o, 10, 8)
-	if err != nil {
-		return 0, fmt.Errorf("invalid octet: %q", o)
+// parseOctets convert number string to []uint16
+func parseOctets(addrStr string) ([]uint16, error) {
+	result := make([]uint16, 2)
+
+	// check if string is correct ipv4 address
+	parts := strings.Split(addrStr, ".")
+	if len(parts) > 4 {
+		p := fmt.Errorf("invalid addr, to many octets: %s", addrStr)
+		return result, p
 	}
 
-	return uint32(v), nil
+	var tmp uint8 = 0
+	// parse octets
+	for i, v := range parts {
+		o, err := strconv.ParseUint(v, 10, 8)
+		if err != nil {
+			return []uint16{}, fmt.Errorf("invalid address: %s", addrStr)
+		}
+
+		if i%2 == 0 {
+			result[tmp] = 0x0 | (uint16(o) << 8)
+		} else {
+			result[tmp] = result[tmp] | uint16(o)
+			tmp += 1
+		}
+	}
+
+	return result, nil
 }
 
-// parseMask format /x to -> uint32
-func parseMask(m string) (uint32, error) {
+// parseMask valid if mask is corect and return []uint16 with mask and prefix
+func parseMask(m string) ([]uint16, uint8, error) {
+	mask := make([]uint16, 2)
 	v, err := strconv.ParseUint(m, 10, 9)
 	if err != nil {
-		return 0, fmt.Errorf("invalid prefix: %q", m)
+		return mask, 0, fmt.Errorf("invalid prefix: %q", m)
 	}
 	if v > 32 {
-		return 0, fmt.Errorf("invalid mask: %q", m)
+		return mask, 0, fmt.Errorf("invalid mask: %q", m)
 	}
 
-	pfx := uint32(v)
-	mask := ^uint32(0) << (32 - pfx)
-	return mask, nil
+	pfx := uint8(v)
+	if pfx >= 16 {
+		mask[0] = 0xFFFF
+		mask[1] = 0xFFFF << (32 - pfx)
+	} else {
+		mask[0] = 0xFFFF << (16 - pfx)
+		mask[1] = 0x0000
+	}
+
+	return mask, pfx, nil
 }
