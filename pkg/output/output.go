@@ -21,7 +21,7 @@ import (
 // This type is used for stable JSON output.
 type JSONOut struct {
 	Results []IPOut  `json:"results"`
-	Errors  []string `json:"error,omitempty"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
 // IPOut represents a structured version of IP address calculation
@@ -126,7 +126,7 @@ func nicePrintJSON(buf *bytes.Buffer, ips []ipcalc.IP, errs []string, d, i bool)
 //
 // Each error is written on its own line with a prefixed header.
 func errorsCLI(buf *bytes.Buffer, errs []string) {
-	buf.WriteString("------ Error\n")
+	buf.WriteString("--- Error\n")
 	for _, e := range errs {
 		buf.WriteString(e)
 	}
@@ -138,7 +138,11 @@ func errorsCLI(buf *bytes.Buffer, errs []string) {
 //   - Exit 1 if none succeeded and there were errors.
 //   - JSON mode still writes human-readable errors to stderr; stdout is JSON
 //     (or "[]\n" if there are no results).
-func PrintOutput(jsonOut, jsonIndent, d bool, errList []string, ipList []ipcalc.IP) (int, error) {
+func PrintOutput(
+	jsonOut, jsonIndent, d bool,
+	errList []string,
+	ipList []ipcalc.IP,
+) (int, error) {
 	outBuf := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
 
