@@ -39,7 +39,7 @@ go build -o goipcalc
 
 ### basic usage
 ```
-goipcal -help
+goipcalc --help
 Usage: goipcalc [OPTIONS] [ADDR/PLEN]
 Examples:
   goipcalc -d 10.0.0.1/24
@@ -52,7 +52,7 @@ Options:
         change json output to indentation
 ```
 ```
-goipcal 2001:db8::1/64 192.168.1.24/25
+goipcalc 2001:db8::1/64 192.168.1.24/25
 ---
 Full address:  2001:db8:0:0:0:0:0:1/64
 Network:       2001:db8:0:0:0:0:0:0
@@ -63,7 +63,7 @@ Network:       192.168.1.0
 Broadcast:     192.168.1.127
 ```
 ```
-goipcal -d 2001:db8::1/64 192.168.1.24/25
+goipcalc -d 2001:db8::1/64 192.168.1.24/25
 ---
 Full address:  2001:db8:0:0:0:0:0:1/64
 Network:       2001:db8:0:0:0:0:0:0
@@ -82,45 +82,49 @@ Mask address:  255.255.255.128
 Hosts number:  128
 ```
 ```
-goipcal -j 2001:db8::1/64 192.168.1.24/25
-[{"full_address":"2001:db8:0:0:0:0:0:1/64","network":"2001:db8:0:0:0:0:0:0","last_address":"2001:db8:0:0:ffff:ffff:ffff:ffff"},{"full_address":"192.168.1.24/25","network":"192.168.1.0","broadcast":"192.168.1.127"}]
+goipcalc -j 2001:db8::1/64 192.168.1.24/25 555.555.555.555/24
+{"results":[{"full_address":"2001:db8:0:0:0:0:0:1/64","network":"2001:db8:0:0:0:0:0:0","last_address":"2001:db8:0:0:ffff:ffff:ffff:ffff"},{"full_address":"192.168.1.24/25","network":"192.168.1.0","broadcast":"192.168.1.127"}],"errors":["skip \"555.555.555.555/24\": invalid address: 555.555.555.555\n"]}
 ```
 ```
-goipcal -j -json-indent 2001:db8::1/64 192.168.1.24/25
-[
-  {
-    "full_address": "2001:db8:0:0:0:0:0:1/64",
-    "network": "2001:db8:0:0:0:0:0:0",
-    "last_address": "2001:db8:0:0:ffff:ffff:ffff:ffff"
-  },
-  {
-    "full_address": "192.168.1.24/25",
-    "network": "192.168.1.0",
-    "broadcast": "192.168.1.127"
-  }
-]
+goipcalc -j -json-indent 2001:db8::1/64 192.168.1.24/25
+{
+  "results": [
+    {
+      "full_address": "2001:db8:0:0:0:0:0:1/64",
+      "network": "2001:db8:0:0:0:0:0:0",
+      "last_address": "2001:db8:0:0:ffff:ffff:ffff:ffff"
+    },
+    {
+      "full_address": "192.168.1.24/25",
+      "network": "192.168.1.0",
+      "broadcast": "192.168.1.127"
+    }
+  ]
+}
 ```
 ```
-goipcal -d -j -json-indent 2001:db8::1/64 192.168.1.24/25
-[
-  {
-    "full_address": "2001:db8:0:0:0:0:0:1/64",
-    "network": "2001:db8:0:0:0:0:0:0",
-    "last_address": "2001:db8:0:0:ffff:ffff:ffff:ffff",
-    "address": "2001:db8:0:0:0:0:0:1",
-    "mask": "64",
-    "mask_address": "ffff:ffff:ffff:ffff:0:0:0:0",
-    "hosts_number": "18446744073709551616"
-  },
-  {
-    "full_address": "192.168.1.24/25",
-    "network": "192.168.1.0",
-    "broadcast": "192.168.1.127",
-    "address": "192.168.1.24",
-    "mask": "25",
-    "mask_address": "255.255.255.128",
-    "hosts_number": "128"
-  }
-]
+goipcalc -d -j -json-indent 2001:db8::1/64 192.168.1.24/25
+{
+  "results": [
+    {
+      "full_address": "2001:db8:0:0:0:0:0:1/64",
+      "network": "2001:db8:0:0:0:0:0:0",
+      "last_address": "2001:db8:0:0:ffff:ffff:ffff:ffff",
+      "address": "2001:db8:0:0:0:0:0:1",
+      "mask": 64,
+      "mask_address": "ffff:ffff:ffff:ffff:0:0:0:0",
+      "hosts_number": 18446744073709551616
+    },
+    {
+      "full_address": "192.168.1.24/25",
+      "network": "192.168.1.0",
+      "broadcast": "192.168.1.127",
+      "address": "192.168.1.24",
+      "mask": 25,
+      "mask_address": "255.255.255.128",
+      "hosts_number": 128
+    }
+  ]
+}
 ```
 
