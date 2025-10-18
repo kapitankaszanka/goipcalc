@@ -13,23 +13,31 @@ import (
 )
 
 type IP struct {
-	addr []uint16
-	mask []uint16
-	pfx  uint8
+	Addr []uint16
+	Mask []uint16
+	Pfx  uint8
 }
 
 func (ip IP) Pretty(detail bool, pretty bool) [][2]string {
+	// setup name for last address
+	var tagLast string
+	if len(ip.Addr) == 2 {
+		tagLast = "Broadcast"
+	} else {
+		tagLast = "Last address"
+	}
+
 	result := [][2]string{
 		{"Full address", ip.GetAddrMask()},
-		ip.GetFirstAddress(),
-		ip.GetLastAddr(),
+		{"Network", NiceAddr(ip.GetFirstAddr())},
+		{tagLast, NiceAddr(ip.GetLastAddr())},
 	}
 
 	if detail {
 		tmp := [][2]string{
-			{"Address", NiceAddr(ip.addr)},
-			{"Mask", strconv.Itoa(int(ip.pfx))},
-			{"Mask address", NiceAddr(ip.mask)},
+			{"Address", NiceAddr(ip.Addr)},
+			{"Mask", strconv.Itoa(int(ip.Pfx))},
+			{"Mask address", NiceAddr(ip.Mask)},
 			{"Hosts number", ip.GetHostsNumberStr(pretty)},
 		}
 		result = append(result, tmp...)
@@ -37,7 +45,7 @@ func (ip IP) Pretty(detail bool, pretty bool) [][2]string {
 	return result
 }
 
-// NiceAddr format IP.addr [][uint16 to string ipv4/6 address string
+// NiceAddr format ip.Addr [][uint16 to string ipv4/6 address string
 func NiceAddr(ip []uint16) string {
 	switch len(ip) {
 	case 2:
@@ -64,98 +72,97 @@ func NiceAddr(ip []uint16) string {
 }
 
 func (ip IP) GetAddrMask() string {
-	return fmt.Sprintf("%s/%d", NiceAddr(ip.addr), ip.pfx)
+	return fmt.Sprintf("%s/%d", NiceAddr(ip.Addr), ip.Pfx)
 }
 
-// GetFirstAddress return string with calcualted network address
-func (ip IP) GetFirstAddress() [2]string {
-	r := append([]uint16(nil), ip.addr...)
-	m := ip.mask
-	p := ip.pfx
-	topic := "Network"
+// GetFirstAddr return string with calcualted network address
+func (ip IP) GetFirstAddr() []uint16 {
+	r := append([]uint16(nil), ip.Addr...)
+	m := ip.Mask
+	p := ip.Pfx
 
-	switch p {
-	case 0:
+	// if mask is 0 return only zeros
+	if p == 0 {
 		for i := range r {
 			r[i] = 0x0
 		}
-		return [2]string{topic, NiceAddr(r)}
-	case 32:
-		return [2]string{topic, NiceAddr(r)}
-	case 128:
-		return [2]string{topic, NiceAddr(r)}
-	default:
-		// to see which hextext may be changed
-		hextetNum := int(p / 16)
-		// to flick corect bits
-		rem := uint8(16 - (p % 16))
-		for i := range r {
-			switch {
-			// when the hextet does not need to be changed, omit
-			case i < hextetNum:
-				continue
-			// when the hextet may be changed
-			case i == hextetNum:
-				if rem == 0 {
-					r[i] = 0x0
-				} else {
-					r[i] = r[i] & m[i]
-				}
-			default:
-				r[i] = 0x0000
-			}
-		}
-		return [2]string{topic, NiceAddr(r)}
+		return r
 	}
+	// if mask is 32 for IPv4 return skip calc
+	if p == 32 && len(r) < 3 {
+		return r
+	}
+	// if mask is 128 for IPv6 return skip calc
+	if p == 128 {
+		return r
+	}
+
+	// to see which hextext may be changed
+	hextetNum := int(p / 16)
+	// to flick corect bits
+	rem := uint8(16 - (p % 16))
+	for i := range r {
+		switch {
+		// when the hextet does not need to be changed, omit
+		case i < hextetNum:
+			continue
+		// when the hextet may be changed
+		case i == hextetNum:
+			if rem == 0 {
+				r[i] = 0x0
+			} else {
+				r[i] = r[i] & m[i]
+			}
+		default:
+			r[i] = 0x0000
+		}
+	}
+	return r
 }
 
 // GetLastAddr return last of ipv6 address
-func (ip IP) GetLastAddr() [2]string {
-	r := append([]uint16(nil), ip.addr...)
-	m := ip.mask
-	p := ip.pfx
-	var topic string
+func (ip IP) GetLastAddr() []uint16 {
+	r := append([]uint16(nil), ip.Addr...)
+	m := ip.Mask
+	p := ip.Pfx
 
-	switch len(r) {
-	case 2:
-		topic = "Broadcast"
-	default:
-		topic = "Last address"
-	}
-
-	switch p {
-	case 0:
+	// if mask is 0 return only zeros
+	if p == 0 {
 		for i := range r {
 			r[i] = 0xFFFF
 		}
-		return [2]string{topic, NiceAddr(r)}
-	case 32:
-		return [2]string{topic, NiceAddr(r)}
-	case 128:
-		return [2]string{topic, NiceAddr(r)}
-	default:
-		// to see which hextext may be changed
-		hextetNum := int(p / 16)
-		// to flick corect bits
-		rem := uint8(16 - (p % 16))
-		for i := range r {
-			switch {
-			// when the hextet does not need to be changed, omit
-			case i < hextetNum:
-				continue
-			// when the hextet may be changed
-			case i == hextetNum:
-				if rem == 0 {
-					r[i] = 0xFFFF
-				} else {
-					r[i] = r[i] | ^m[i]
-				}
-			default:
-				r[i] = 0xFFFF
-			}
-		}
-		return [2]string{topic, NiceAddr(r)}
+		return r
 	}
+	// if mask is 32 for IPv4 return skip calc
+	if p == 32 && len(r) == 2 {
+		return r
+	}
+	// if mask is 128 for IPv6 return skip calc
+	if p == 128 {
+		return r
+	}
+
+	// to see which hextext may be changed
+	hextetNum := int(p / 16)
+	// to flick corect bits
+	rem := uint8(16 - (p % 16))
+	for i := range r {
+		switch {
+		// when the hextet does not need to be changed, omit
+		case i < hextetNum:
+			continue
+		// when the hextet may be changed
+		case i == hextetNum:
+			if rem == 0 {
+				r[i] = 0xFFFF
+			} else {
+				r[i] = r[i] | ^m[i]
+			}
+		default:
+			r[i] = 0xFFFF
+		}
+	}
+	return r
 }
 
 // formatBigIntWithSpaces sperate big int value on space sparate string
@@ -178,13 +185,13 @@ func formatBigIntWithSpaces(n *big.Int) string {
 
 func (ip IP) GetHostsNumberStr(format bool) string {
 	var totalBits uint
-	if len(ip.addr) == 2 { // IPv4
+	if len(ip.Addr) == 2 { // IPv4
 		totalBits = 32
 	} else { // IPv6
 		totalBits = 128
 	}
 
-	mask := uint(ip.pfx)
+	mask := uint(ip.Pfx)
 	hostBits := totalBits - mask
 
 	// Special case for IPv4 /31 networks
