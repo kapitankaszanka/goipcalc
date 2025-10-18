@@ -38,9 +38,9 @@ func ParseIPv4Prefix(s string) (IP, error) {
 		return out, err
 	}
 
-	out.addr = ip
-	out.mask = mask
-	out.pfx = pfx
+	out.Addr = ip
+	out.Mask = mask
+	out.Pfx = pfx
 	return out, nil
 }
 

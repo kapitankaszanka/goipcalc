@@ -105,9 +105,9 @@ func ParseIPv6Prefix(s string) (IP, error) {
 	}
 
 	pfx := uint8(pfxU)
-	out.addr = tmpAddr
-	out.mask = parseMaskHextet(pfx)
-	out.pfx = pfx
+	out.Addr = tmpAddr
+	out.Mask = parseMaskHextet(pfx)
+	out.Pfx = pfx
 	return out, nil
 }
 
