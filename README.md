@@ -20,7 +20,7 @@ Given an IP address (usually in `IP/MASK` CIDR format), it will:
 
 ## ⚙️ Requirements
 
-- Go (recommended: `1.20+`)
+- Go (recommended: `1.22+`)
 
 ---
 
